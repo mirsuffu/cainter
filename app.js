@@ -1013,6 +1013,21 @@ function renderSettings() {
     etrack.classList.toggle('on', editorUnlocked);
     etext.textContent = editorUnlocked ? 'Unlocked' : 'Locked';
   }
+
+  // Notification Help Note
+  const helpWrap = document.getElementById('settings-notif-help');
+  if (helpWrap) {
+    helpWrap.innerHTML = `
+      <div style="margin-top:20px; padding:12px; border-radius:8px; background:rgba(124,111,205,0.05); border:1px dashed var(--border);">
+        <div style="font-size:12px; font-weight:700; color:var(--accent); margin-bottom:4px;">💡 Notification Reliability</div>
+        <div style="font-size:11px; color:var(--text2); line-height:1.4;">
+          Android/iOS may kill background apps to save battery. For best results, 
+          <strong>Disable Battery Optimization</strong> for this PWA in your device settings. 
+          ${('showTrigger' in Notification.prototype) ? '<br><span style="color:var(--success)">✓ OS Triggers supported on this device.</span>' : ''}
+        </div>
+      </div>
+    `;
+  }
 }
 function saveSettings() {
   if(!editorUnlocked) return;
@@ -1375,10 +1390,22 @@ function rescheduleAllNotifications() {
         
         if(notifyTime > now) {
           const id = `slot_${key}_${idx}_${isTomorrow ? 'next' : 'curr'}`;
+          // 1. Local fallback
           notificationTimers[id] = setTimeout(() => {
             fireSlotNotification(s);
             delete notificationTimers[id];
           }, notifyTime - now);
+
+          // 2. OS-level trigger
+          if ('showTrigger' in Notification.prototype && window.TimestampTrigger) {
+            const bodies = [
+              `Time to grind! "${s.label}" starts in 10 mins. I'm watching... don't slack off! 😉`,
+              `Hey Dear! "${s.label}" is calling. 10 mins to go. Excellence is expected! ✨`,
+              `Focus up: "${s.label}" starts soon. Put that phone down and get to work! 🧠`
+            ];
+            const randBody = bodies[Math.floor(Math.random() * bodies.length)];
+            showSuffuNotification('Time to Grind! 🔔', randBody, notifyTime);
+          }
         }
       }
     });
@@ -1397,15 +1424,22 @@ function rescheduleAllNotifications() {
   }, nextMidnight.getTime() - now);
 }
 
-async function showSuffuNotification(title, bodyText) {
+async function showSuffuNotification(title, bodyText, timestamp = null) {
   const options = {
     body: bodyText,
     icon: 'logo.png',
     badge: 'logo.png',
     vibrate: [200, 100, 200],
-    tag: 'suffu-notif-' + Date.now(),
+    tag: 'suffu-notif-' + (timestamp || Date.now()),
     data: { url: window.location.href }
   };
+
+  // If a future timestamp is provided and the browser supports Triggers, use it!
+  if (timestamp && 'showTrigger' in Notification.prototype && window.TimestampTrigger) {
+    try {
+      options.showTrigger = new TimestampTrigger(timestamp);
+    } catch(e) { console.warn('Trigger failed, falling back to instant', e); }
+  }
 
   if ('serviceWorker' in navigator) {
     const reg = await navigator.serviceWorker.ready;
@@ -1430,10 +1464,18 @@ function scheduleNotification(r) {
   const delay = target - Date.now();
   if(delay <= 0) return;
   
+  // 1. Existing setTimeout fallback (reliable while app is open)
   notificationTimers[r.id] = setTimeout(() => {
     fireNotification(r);
     delete notificationTimers[r.id];
   }, delay);
+
+  // 2. Experimental OS-level trigger (reliable even if app is closed)
+  if ('showTrigger' in Notification.prototype && window.TimestampTrigger) {
+    const randTitle = ['Reminder! 🔔', 'Don\'t forget! 📌', 'Excellence awaits! 🚀'][Math.floor(Math.random() * 3)];
+    const body = `${r.title}. I expect excellence, nothing less. ✨ ` + (r.subject ? `[${getSubjectLabel(r.subject)}]` : '');
+    showSuffuNotification(randTitle, body, target);
+  }
 }
 
 function fireNotification(r) {
