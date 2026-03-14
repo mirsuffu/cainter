@@ -1320,40 +1320,36 @@ function deleteReminder(id) {
 // ============================================================
 // NOTIFICATIONS
 // ============================================================
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
 async function initNotifications() {
   if (!('Notification' in window)) return;
   
-  // Register Service Worker
   if ('serviceWorker' in navigator) {
     try {
       await navigator.serviceWorker.register('sw.js');
     } catch(e) { console.warn('SW registration failed', e); }
   }
 
-  // Request permission
   if (Notification.permission === 'default') {
-    const perm = await Notification.requestPermission();
-    if (perm === 'granted') {
-       // Get FCM Token if possible
-       if (window._fbMsg && window._getToken) {
-         try {
-           const token = await window._getToken(window._fbMsg, { vapidKey: window._VAPID_KEY });
-           // We'll just log it for now as we don't have a backend to store it
-           console.log('FCM Token:', token);
-         } catch(e) {}
-       }
-    }
+    await Notification.requestPermission();
   }
   
   rescheduleAllNotifications();
 }
 
+// Global timer for midnight refresh
+let midnightTimer = null;
+
 function rescheduleAllNotifications() {
-  // Clear existing timers
   Object.keys(notificationTimers).forEach(id => clearTimeout(notificationTimers[id]));
   notificationTimers = {};
   
   const now = Date.now();
+  const today = new Date();
+  
+  // 1. Reminders
   data.reminders.forEach(r => {
     if(!r.done && !r.notified) {
       const target = new Date(r.datetime).getTime();
@@ -1363,52 +1359,76 @@ function rescheduleAllNotifications() {
     }
   });
 
-  // Schedule slot notifications (10 mins before)
-  const isSun = new Date().getDay() === 0;
-  const key = isSun ? 'sundays' : 'allDaysExceptSundays';
-  const slots = data.schedules[key]?.slots || [];
-  const todayStr = getTodayStr();
-  
-  slots.forEach((s, idx) => {
-    if(s.notify && s.start) {
-      const [h, m] = s.start.split(':').map(Number);
-      const target = new Date();
-      target.setHours(h, m, 0, 0);
-      const notifyTime = target.getTime() - (10 * 60 * 1000); // 10 mins early
-      
-      if(notifyTime > now) {
-        const id = `slot_${key}_${idx}`;
-        if(notificationTimers[id]) clearTimeout(notificationTimers[id]);
-        notificationTimers[id] = setTimeout(() => {
-          fireSlotNotification(s);
-          delete notificationTimers[id];
-        }, notifyTime - now);
+  // 2. Schedule Slots (Today + Tomorrow lookahead)
+  const scheduleLookahead = (dateObj, isTomorrow = false) => {
+    const isSun = dateObj.getDay() === 0;
+    const key = isSun ? 'sundays' : 'allDaysExceptSundays';
+    const slots = data.schedules[key]?.slots || [];
+    const datePrefix = toDateStrSimple(dateObj);
+    
+    slots.forEach((s, idx) => {
+      if(s.notify && s.start) {
+        const [h, m] = s.start.split(':').map(Number);
+        const target = new Date(dateObj);
+        target.setHours(h, m, 0, 0);
+        const notifyTime = target.getTime() - (10 * 60 * 1000); // 10 mins early
+        
+        if(notifyTime > now) {
+          const id = `slot_${key}_${idx}_${isTomorrow ? 'next' : 'curr'}`;
+          notificationTimers[id] = setTimeout(() => {
+            fireSlotNotification(s);
+            delete notificationTimers[id];
+          }, notifyTime - now);
+        }
       }
-    }
-  });
+    });
+  };
+
+  scheduleLookahead(today);
+  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+  scheduleLookahead(tomorrow, true);
+
+  // 3. Midnight Refresh Timer
+  if (midnightTimer) clearTimeout(midnightTimer);
+  const nextMidnight = new Date(today);
+  nextMidnight.setHours(24, 0, 1, 0); // 1 second past midnight
+  midnightTimer = setTimeout(() => {
+    rescheduleAllNotifications();
+  }, nextMidnight.getTime() - now);
+}
+
+async function showSuffuNotification(title, bodyText) {
+  const options = {
+    body: bodyText,
+    icon: 'logo.png',
+    badge: 'logo.png',
+    vibrate: [200, 100, 200],
+    tag: 'suffu-notif-' + Date.now(),
+    data: { url: window.location.href }
+  };
+
+  if ('serviceWorker' in navigator) {
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification('Suffu Says... ' + title, options);
+  } else {
+    new Notification('Suffu Says... ' + title, options);
+  }
 }
 
 function fireSlotNotification(slot) {
-  if(Notification.permission === 'granted') {
-    const bodies = [
-      `Time to grind! "${slot.label}" starts in 10 mins. Suffu is watching... don't slack off! 😉`,
-      `Hey Dear! "${slot.label}" is calling. 10 mins to go. Excellence is expected! ✨`,
-      `Suffu Flavour: "${slot.label}" starts soon. Put that phone down and focus! 🧠`
-    ];
-    const randBody = bodies[Math.floor(Math.random() * bodies.length)];
-    new Notification('JG. SUFFU: Time to Grind! 🔔', {
-      body: randBody,
-      icon: 'logo.png'
-    });
-  }
+  const bodies = [
+    `Time to grind! "${slot.label}" starts in 10 mins. I'm watching... don't slack off! 😉`,
+    `Hey Dear! "${slot.label}" is calling. 10 mins to go. Excellence is expected! ✨`,
+    `Focus up: "${slot.label}" starts soon. Put that phone down and get to work! 🧠`
+  ];
+  const randBody = bodies[Math.floor(Math.random() * bodies.length)];
+  showSuffuNotification('Time to Grind! 🔔', randBody);
 }
 
 function scheduleNotification(r) {
   const target = new Date(r.datetime).getTime();
   const delay = target - Date.now();
   if(delay <= 0) return;
-  
-  if(notificationTimers[r.id]) clearTimeout(notificationTimers[r.id]);
   
   notificationTimers[r.id] = setTimeout(() => {
     fireNotification(r);
@@ -1417,22 +1437,16 @@ function scheduleNotification(r) {
 }
 
 function fireNotification(r) {
-  if(Notification.permission === 'granted') {
-    const titles = ['Hey Dear, Reminder! 🔔', 'Suffu says: Don\'t forget! 📌', 'Excellence awaits! 🚀'];
-    const randTitle = titles[Math.floor(Math.random() * titles.length)];
-    const options = {
-      body: `${r.title}. Suffu expects excellence, nothing less. ✨ ` + (r.subject ? `[${getSubjectLabel(r.subject)}]` : ''),
-      icon: 'logo.png'
-    };
-    new Notification(randTitle, options);
-  }
+  const titles = ['Reminder! 🔔', 'Don\'t forget! 📌', 'Excellence awaits! 🚀'];
+  const randTitle = titles[Math.floor(Math.random() * titles.length)];
+  const body = `${r.title}. I expect excellence, nothing less. ✨ ` + (r.subject ? `[${getSubjectLabel(r.subject)}]` : '');
   
-  // Mark as notified so we don't reschedule
+  showSuffuNotification(randTitle, body);
+  
   const rem = data.reminders.find(rm => rm.id === r.id);
   if(rem) {
     rem.notified = true;
     saveData();
-    // Redraw if in reminders section
     if(currentSection === 'reminders') renderReminders();
   }
 }
@@ -1869,3 +1883,22 @@ function init() {
 
 }
 // init() is called by the Firebase module script after SDK is ready
+
+// ============================================================
+// ZOOM BLOCKING (Ctrl+Wheel / Ctrl+Plus / Gestures)
+// ============================================================
+document.addEventListener('wheel', (e) => {
+  if (e.ctrlKey) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && (e.key === '+' || e.key === '=' || e.key === '-')) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('gesturestart', (e) => {
+  e.preventDefault();
+});
