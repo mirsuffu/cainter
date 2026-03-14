@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<!--
+  JG. SUFFU — CA Intermediate Tracker
+  If hosted on GitHub Pages: ensure a .nojekyll file exists in repo root.
+-->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JG. SUFFU — CA Intermediate Tracker</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c6fcd">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JG. SUFFU">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="editor-locked">
+
+<div id="app" style="display:none;">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div id="topbar-brand">
+      <div class="brand-name" id="topbar-brand-name">JG. SUFFU</div>
+      <div class="brand-tag">Not to mention, but someone genuinely wants your success. — JG. SUFFU</div>
+    </div>
+    <div id="topbar-center">
+      <div id="days-remaining">— Days</div>
+      <div id="topbar-date"></div>
+    </div>
+    <div id="topbar-actions">
+      <div id="conn-status" title="Connection status">
+        <span id="conn-dot"></span>
+        <span id="conn-label">Online</span>
+      </div>
+      <button class="icon-btn" id="fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="nav-item active" data-section="planner"><span class="nav-icon">📅</span> Planner</div>
+      <div class="nav-item" data-section="test"><span class="nav-icon">📝</span> Test</div>
+      <div class="nav-item" data-section="schedule"><span class="nav-icon">🕐</span> Schedule</div>
+      <div class="nav-item" data-section="subjects"><span class="nav-icon">📚</span> Subjects</div>
+      <div class="nav-item" data-section="metrics"><span class="nav-icon">📊</span> Metrics</div>
+      <div class="nav-item" data-section="reminders"><span class="nav-icon">🔔</span> Reminders</div>
+      <div class="nav-item" data-section="settings"><span class="nav-icon">⚙️</span> Settings</div>
+      <div id="sidebar-footer">
+        <div id="editor-badge" class="locked">🔒 LOCKED</div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+      <!-- PLANNER -->
+      <div id="planner-section" class="section active">
+        <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-direction:row;flex-shrink:0;">
+          <div class="section-title">📅 Planner</div>
+          <button class="btn btn-surface" id="scroll-today-btn" title="Scroll to today" style="white-space:nowrap;font-size:12px;padding:6px 12px;flex-shrink:0;">📍 Today</button>
+        </div>
+        <div id="planner-table-wrap">
+          <table id="planner-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Day</th>
+                <th>Adv. Accounting</th>
+                <th>Corporate & Other Laws</th>
+                <th>Taxation</th>
+                <th>Cost & MA</th>
+                <th>Auditing & Ethics</th>
+                <th>FM & SM</th>
+                <th>All ✓</th>
+              </tr>
+            </thead>
+            <tbody id="planner-tbody"></tbody>
+          </table>
+          <div id="planner-cards"></div>
+        </div>
+        <div id="planner-scroll-track">
+          <div id="planner-scroll-thumb"></div>
+          <div id="planner-scroll-label"></div>
+        </div>
+      </div>
+
+      <!-- TEST -->
+      <div id="test-section" class="section">
+        <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-direction:row;flex-shrink:0;">
+          <div class="section-title">📝 Test Records</div>
+          <button class="btn btn-accent" id="add-test-btn">+ Add Test</button>
+        </div>
+        <div id="test-filter-bar" style="padding: 10px 14px; display: flex; gap: 8px; border-bottom: 1px solid var(--border); background: var(--surface);">
+          <select id="test-filter-subj" class="form-input" style="flex: 1; padding: 6px 10px; font-size: 13px;">
+            <option value="ALL">All Subjects</option>
+          </select>
+          <select id="test-filter-type" class="form-input" style="flex: 1; padding: 6px 10px; font-size: 13px;">
+            <option value="ALL">All Types</option>
+            <option value="Chapter">Chapter</option>
+            <option value="Unit">Unit</option>
+            <option value="Full">Full</option>
+            <option value="RTP">RTP</option>
+            <option value="MTP">MTP</option>
+            <option value="PYQ">PYQ</option>
+          </select>
+        </div>
+        <div id="test-table-wrap">
+          <table id="test-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Coverage</th>
+                <th>Type</th>
+                <th>Score</th>
+                <th>Confidence</th>
+                <th>Comment</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="test-tbody"></tbody>
+          </table>
+          <div id="test-cards" style="display:none;flex-direction:column;gap:10px;padding:10px;"></div>
+        </div>
+      </div>
+
+      <!-- SCHEDULE -->
+      <div id="schedule-section" class="section">
+        <div class="section-header">
+          <div class="section-title">🕐 Schedule</div>
+        </div>
+        <div class="section-body">
+          <div class="schedule-card glass-card">
+            <div class="schedule-card-header"><span>Learning Days</span></div>
+            <div class="schedule-card-body" id="sched-body-0"></div>
+          </div>
+          <div class="schedule-card glass-card">
+            <div class="schedule-card-header"><span>Revision/Test Days</span></div>
+            <div class="schedule-card-body" id="sched-body-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBJECTS -->
+      <div id="subjects-section" class="section">
+        <div class="section-header">
+          <div class="section-title">📚 Subjects & Chapters</div>
+        </div>
+        <div class="section-body" id="subjects-body"></div>
+      </div>
+
+      <!-- REMINDERS -->
+      <div id="reminders-section" class="section">
+        <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-direction:row;flex-shrink:0;">
+          <div class="section-title">🔔 Reminders</div>
+          <button class="btn btn-accent" id="add-reminder-btn">+ Add Reminder</button>
+        </div>
+        <div id="reminder-filter-bar" style="padding: 10px 14px; display: flex; gap: 8px; border-bottom: 1px solid var(--border); background: var(--surface);">
+          <select id="rf-category" class="form-input" style="flex: 1; padding: 6px 10px; font-size: 13px;">
+            <option value="all">All Categories</option>
+            <option value="Study">Study</option>
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Other">Other</option>
+          </select>
+          <select id="rf-status" class="form-input" style="flex: 1; padding: 6px 10px; font-size: 13px;">
+            <option value="pending">Pending</option>
+            <option value="done">Done</option>
+            <option value="all">All Status</option>
+          </select>
+        </div>
+        <div id="reminders-list-wrap" style="padding:14px; display:flex; flex-direction:column; gap:12px;">
+          <!-- Reminders cards injected here -->
+        </div>
+      </div>
+      
+      <!-- METRICS -->
+      <div id="metrics-section" class="section">
+        <div class="section-header">
+          <div class="section-title">📊 Metrics</div>
+        </div>
+        <div class="section-body">
+          <div class="metric-card glass-card">
+            <div class="metric-title">Overall Progress</div>
+            <div id="donut-wrap">
+              <canvas id="donut-canvas" width="100" height="100"></canvas>
+              <div id="donut-info">
+                <div id="donut-pct">0%</div>
+                <div id="donut-label">Completed</div>
+                <div id="donut-ticks">0 / 0 ticks</div>
+              </div>
+            </div>
+          </div>
+          <div class="metric-card glass-card">
+            <div class="metric-title">Per-Subject Completion</div>
+            <div id="subj-bars"></div>
+          </div>
+          <div class="metric-card glass-card">
+            <div class="metric-title">Confidence & Difficulty</div>
+            <div class="conf-grid" id="conf-grid"></div>
+          </div>
+          <div class="metric-card glass-card">
+            <div class="metric-title">Score Trend</div>
+            <div style="width: 100%; height: 160px; position: relative; margin-top: 10px;">
+              <canvas id="score-trend-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+            </div>
+          </div>
+          <div class="metric-card glass-card">
+            <div class="metric-title">Study Streak</div>
+            <div class="streak-big" id="streak-num">0</div>
+            <div class="streak-unit">day streak 🔥</div>
+            <div class="streak-longest">Longest: <span id="streak-longest">0</span> days</div>
+          </div>
+          <div class="metric-card glass-card">
+            <div class="metric-title">Days vs Chapters</div>
+            <div class="days-stats-grid" id="days-stats"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="settings-section" class="section">
+        <div class="section-header">
+          <div class="section-title">⚙️ Settings</div>
+        </div>
+        <div class="section-body">
+          <div class="settings-inner">
+
+            <!-- PREFERENCES -->
+            <div class="settings-group glass-card">
+              <div class="settings-group-title">Preferences</div>
+              <div class="settings-row">
+                <label class="settings-label">Your Name<span class="lock-note">Shows in topbar</span></label>
+                <div style="display:flex;gap:8px;flex:1;max-width:260px;">
+                  <input type="text" id="setting-user-name" placeholder="Your name" style="flex:1;">
+                  <button class="btn btn-accent" id="save-name-btn" style="padding:6px 14px;font-size:12px;white-space:nowrap;">Save</button>
+                </div>
+              </div>
+              <div class="settings-row">
+                <label class="settings-label">Theme</label>
+                <label class="toggle-switch" id="theme-toggle-label">
+                  <div class="toggle-track" id="theme-track"><div class="toggle-thumb"></div></div>
+                  <span class="toggle-label" id="theme-toggle-text">Dark Mode</span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <label class="settings-label">Always Fullscreen<span class="lock-note">Auto on every load</span></label>
+                <label class="toggle-switch" id="fullscreen-toggle-label">
+                  <div class="toggle-track" id="fullscreen-track"><div class="toggle-thumb"></div></div>
+                  <span class="toggle-label" id="fullscreen-toggle-text">Off</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- SECURITY -->
+            <div class="settings-group glass-card">
+              <div class="settings-group-title">Security</div>
+              <div class="settings-row">
+                <label class="settings-label">Editor Mode<span class="lock-note">Unlock locked features</span></label>
+                <label class="toggle-switch" id="editor-toggle-label">
+                  <div class="toggle-track" id="editor-track"><div class="toggle-thumb"></div></div>
+                  <span class="toggle-label" id="editor-toggle-text">Locked</span>
+                </label>
+              </div>
+              <div class="settings-row">
+                <label class="settings-label">App Updates<span class="lock-note">Check for latest version</span></label>
+                <button class="btn btn-surface" id="check-update-btn" style="flex: 1; max-width: 160px; font-size: 12px; padding: 8px;">Check for Updates</button>
+              </div>
+            </div>
+
+            <!-- EXAM CONFIGURATION -->
+            <div class="settings-group glass-card">
+              <div class="settings-group-title">Exam Configuration <span style="color:var(--danger);font-size:10px;">EDITOR ONLY</span></div>
+              <div class="settings-row editor-only">
+                <label class="settings-label">Exam Date<span class="lock-note">Regenerates planner</span></label>
+                <input type="date" id="setting-exam-date">
+              </div>
+              <div class="settings-row editor-only">
+                <label class="settings-label">Planner Start Date<span class="lock-note">From this date</span></label>
+                <input type="date" id="setting-start-date">
+              </div>
+              <div class="settings-row editor-only">
+                <button class="btn btn-accent" id="save-settings-btn">Save Settings</button>
+              </div>
+            </div>
+
+            <!-- DATA MANAGEMENT -->
+            <div class="settings-group glass-card">
+              <div class="settings-group-title">Data Management</div>
+              <div class="settings-row" style="gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-success" id="export-btn">⬇ Export Data</button>
+                <label class="btn btn-surface" style="cursor:pointer;">
+                  ⬆ Import Data
+                  <input type="file" accept=".json" id="import-input" style="display:none;">
+                </label>
+                <button class="btn btn-danger" id="clear-data-btn">🗑 Clear Data</button>
+              </div>
+            </div>
+
+            <!-- ACCOUNT -->
+            <div class="settings-group glass-card">
+              <div class="settings-group-title">Account</div>
+              <div class="settings-row">
+                <div>
+                  <div style="font-size:13px;font-weight:500;color:var(--text);">Signed in as</div>
+                  <div style="font-size:12px;color:var(--text2);margin-top:2px;" id="settings-user-email">—</div>
+                </div>
+              </div>
+              <div class="settings-row">
+                <button class="btn btn-surface" id="logout-btn" style="border-color:var(--danger);color:var(--danger);">↩ Sign Out</button>
+              </div>
+            </div>
+
+            <!-- CONTACT -->
+            <div class="settings-group glass-card">
+              <div class="settings-group-title">Contact</div>
+              <div class="settings-row">
+                <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Questions, bugs, feedback or just want to say hi?</div>
+              </div>
+              <div class="settings-row">
+                <a href="https://wa.me/919422872892?text=Hey%20Suffu%2C%20I%20came%20to%20you%20regarding%20your%20CA%20Intermediate%20App%2C%20I%20really%20need%20your%20help..." target="_blank" class="whatsapp-btn">💬 Ask Suffu on WhatsApp</a>
+              </div>
+            </div>
+
+          </div><!-- /.settings-inner -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+<!-- Edit Test Modal -->
+<div class="modal-overlay" id="test-edit-modal">
+  <div class="modal-box glass-card" style="min-width:500px;">
+    <div class="modal-title">✏️ Edit Test Record</div>
+    <div class="modal-sub">Update this test entry</div>
+    <div class="test-form-grid">
+      <div class="test-form-field">
+        <label class="test-form-label">Date</label>
+        <input type="date" id="te-date">
+      </div>
+      <div class="test-form-field">
+        <label class="test-form-label">Subject</label>
+        <select id="te-subject">
+          <option value="advacc">Adv. Accounting</option>
+          <option value="law">Corporate & Other Laws</option>
+          <option value="taxation">Taxation</option>
+          <option value="costing">Cost & MA</option>
+          <option value="audit">Auditing & Ethics</option>
+          <option value="fmsm">FM & SM</option>
+          <option value="all">All Subjects</option>
+        </select>
+      </div>
+      <div class="test-form-field full">
+        <label class="test-form-label">Coverage</label>
+        <input type="text" id="te-coverage" placeholder="e.g. Chapter 1–3 / Unit 2 / Full Syllabus">
+      </div>
+      <div class="test-form-field">
+        <label class="test-form-label">Type</label>
+        <select id="te-type">
+          <option value="RTP">RTP</option>
+          <option value="MTP">MTP</option>
+          <option value="PYQ">PYQ</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="test-form-field">
+        <label class="test-form-label">Score</label>
+        <input type="text" id="te-score" placeholder="42/60">
+      </div>
+      <div class="test-form-field full">
+        <label class="test-form-label">Confidence</label>
+        <div class="rating-group" id="te-confidence-stars">
+          <div class="rating-btn low" data-id="low" data-val="1">Low</div>
+          <div class="rating-btn med" data-id="med" data-val="3">Medium</div>
+          <div class="rating-btn hard" data-id="hard" data-val="5">High</div>
+        </div>
+      </div>
+      <div class="test-form-field full">
+        <label class="test-form-label">Comment (optional)</label>
+        <textarea id="te-comment" placeholder="e.g. Struggled with Chapter 3..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-surface" id="test-edit-cancel-btn">Cancel</button>
+      <button class="btn btn-accent" id="test-edit-save-btn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Editor Password Modal -->
+<div class="modal-overlay" id="editor-modal">
+  <div class="modal-box glass-card">
+    <div class="modal-title">🔐 Editor Mode</div>
+    <div class="modal-sub">Enter the password to unlock editing capabilities</div>
+    <div class="modal-input-row">
+      <input type="password" id="editor-pw-input" placeholder="Password" autocomplete="off">
+      <div class="modal-error" id="editor-pw-error"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-surface" id="editor-cancel-btn">Cancel</button>
+      <button class="btn btn-accent" id="editor-confirm-btn">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Confirm Modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal-box glass-card">
+    <div class="modal-title">⚠️ Import Data</div>
+    <div class="modal-sub">This will <strong>completely replace</strong> all existing data. This action cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn btn-surface" id="import-cancel-btn">Cancel</button>
+      <button class="btn btn-danger" id="import-confirm-btn">Yes, Override All Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Reminder Modal -->
+<div class="modal-overlay" id="reminder-modal">
+  <div class="modal-box glass-card" style="max-width:480px;">
+    <div class="modal-title">🔔 Add Reminder</div>
+    <div class="modal-sub">I'll remind you exactly when it's time!</div>
+    <div class="test-form-grid">
+      <div class="test-form-field full">
+        <label class="test-form-label">Title</label>
+        <input type="text" id="rm-title" placeholder="e.g. Solve Law PYQ Oct '24">
+      </div>
+      <div class="test-form-field">
+        <label class="test-form-label">Date & Time</label>
+        <input type="datetime-local" id="rm-datetime">
+      </div>
+      <div class="test-form-field">
+        <label class="test-form-label">Category</label>
+        <select id="rm-category">
+          <option value="Study">Study</option>
+          <option value="Work">Work</option>
+          <option value="Personal">Personal</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="test-form-field full" id="rm-subject-field">
+        <label class="test-form-label">Link Subject (optional)</label>
+        <select id="rm-subject">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-surface" id="reminder-cancel-btn">Cancel</button>
+      <button class="btn btn-accent" id="reminder-save-btn">Set Reminder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Test Modal -->
+<div class="modal-overlay" id="test-modal">
+  <div class="modal-box glass-card" style="min-width:500px;">
+    <div class="modal-title">📝 Add Test Record</div>
+    <div class="modal-sub">Log a test you appeared in</div>
+    <div class="test-form-grid">
+      <div class="test-form-field">
+        <label class="test-form-label">Date</label>
+        <input type="date" id="tf-date">
+      </div>
+      <div class="test-form-field">
+        <label class="test-form-label">Subject</label>
+        <select id="tf-subject">
+          <option value="advacc">Adv. Accounting</option>
+          <option value="law">Corporate & Other Laws</option>
+          <option value="taxation">Taxation</option>
+          <option value="costing">Cost & MA</option>
+          <option value="audit">Auditing & Ethics</option>
+          <option value="fmsm">FM & SM</option>
+          <option value="all">All Subjects</option>
+        </select>
+      </div>
+      <div class="test-form-field full">
+        <label class="test-form-label">Coverage (Chapters / Unit / Whole)</label>
+        <input type="text" id="tf-coverage" placeholder="e.g. Chapter 1–3 / Unit 2 / Full Syllabus">
+      </div>
+      <div class="test-form-field">
+        <label class="test-form-label">Type</label>
+        <select id="tf-type">
+          <option value="RTP">RTP</option>
+          <option value="MTP">MTP</option>
+          <option value="PYQ">PYQ</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="test-form-field">
+        <label class="test-form-label">Score (e.g. 42/60)</label>
+        <input type="text" id="tf-score" placeholder="42/60">
+      </div>
+      <div class="test-form-field full">
+        <label class="test-form-label">Confidence</label>
+        <div class="rating-group" id="tf-confidence-stars">
+          <div class="rating-btn low" data-id="low" data-val="1">Low</div>
+          <div class="rating-btn med" data-id="med" data-val="3">Medium</div>
+          <div class="rating-btn hard" data-id="hard" data-val="5">High</div>
+        </div>
+      </div>
+      <div class="test-form-field full">
+        <label class="test-form-label">Comment (optional)</label>
+        <textarea id="tf-comment" placeholder="e.g. Struggled with Chapter 3, need revision..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-surface" id="test-cancel-btn">Cancel</button>
+      <button class="btn btn-accent" id="test-save-btn">Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     WELCOME / DAILY MODAL
+     ============================================================ -->
+<div id="welcome-overlay">
+  <div id="welcome-box">
+    <div class="welcome-title" id="welcome-title"></div>
+    <div id="welcome-body"></div>
+    <button id="welcome-dive-btn">Dive In 🚀</button>
+    <div id="welcome-timer"></div>
+  </div>
+</div>
+
+
+<!-- Logout Confirmation Modal -->
+<div class="modal-overlay" id="logout-modal">
+  <div class="modal-box glass-card" style="max-width:340px;">
+    <div class="modal-title">👋 Sign Out?</div>
+    <div class="modal-sub">You'll need to sign in again on this device. Your data is safely stored in the cloud.</div>
+    <div class="modal-actions">
+      <button class="btn btn-surface" id="logout-cancel-btn">Cancel</button>
+      <button class="btn btn-danger" id="logout-confirm-btn">Yes, Sign Out</button>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<!-- Mobile bottom tab bar (hidden on desktop via CSS) -->
+<div id="mobile-tabs" style="display:none;">
+  <button class="mobile-tab active" data-section="planner"><span class="tab-icon">📅</span>Planner</button>
+  <button class="mobile-tab" data-section="test"><span class="tab-icon">📝</span>Test</button>
+  <button class="mobile-tab" data-section="schedule"><span class="tab-icon">🕐</span>Schedule</button>
+  <button class="mobile-tab" data-section="subjects"><span class="tab-icon">📚</span>Subjects</button>
+  <button class="mobile-tab" data-section="metrics"><span class="tab-icon">📊</span>Metrics</button>
+  <button class="mobile-tab" data-section="reminders"><span class="tab-icon">🔔</span>Reminders</button>
+  <button class="mobile-tab" data-section="settings"><span class="tab-icon">⚙️</span>Settings</button>
+</div>
+
+<!-- ============================================================
+     CLEAR DATA MODAL — multi-step flow
+     step 1: choose scope (user / both) + export nudge
+     step 2: confirm #1 (type "DELETE")
+     step 3a (user only): confirm #2 final
+     step 3b (both): enter editor password, then confirm
+     ============================================================ -->
+<div class="modal-overlay" id="clear-modal">
+  <div class="modal-box glass-card" style="min-width:420px;">
+
+    <!-- STEP 1: Choose what to clear -->
+    <div id="clear-step-1">
+      <div class="modal-title">🗑 Clear Data</div>
+      <div class="modal-sub">What data would you like to erase?</div>
+      <!-- Export nudge -->
+      <div style="background:rgba(224,169,109,0.1);border:1px solid rgba(224,169,109,0.3);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:13px;color:var(--warning);display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;">💾</span>
+        <span>We strongly recommend <strong>exporting your data first</strong> before clearing. This action cannot be undone.</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+        <label class="clear-scope-option" id="scope-user-opt">
+          <input type="radio" name="clear-scope" value="user" id="scope-user" checked>
+          <div class="scope-opt-body">
+            <div class="scope-opt-title">User Data Only</div>
+            <div class="scope-opt-desc">Planner ticks &amp; plans, test records, chapter ratings. Settings and chapter list are kept.</div>
+          </div>
+        </label>
+        <label class="clear-scope-option" id="scope-both-opt">
+          <input type="radio" name="clear-scope" value="both" id="scope-both">
+          <div class="scope-opt-body">
+            <div class="scope-opt-title">Everything (User + Editor Data)</div>
+            <div class="scope-opt-desc">Wipes all data including chapters, schedules, settings. Requires Editor password.</div>
+          </div>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-surface" id="clear-cancel-1">Cancel</button>
+        <button class="btn btn-success" id="clear-export-then-next" style="margin-right:auto;">⬇ Export First</button>
+        <button class="btn btn-danger" id="clear-next-1">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Type DELETE to confirm -->
+    <div id="clear-step-2" style="display:none;">
+      <div class="modal-title">⚠️ Are you sure?</div>
+      <div class="modal-sub" id="clear-step2-sub">Type <strong>DELETE</strong> below to confirm you want to erase this data.</div>
+      <div class="modal-input-row">
+        <input type="text" id="clear-confirm-text" placeholder="Type DELETE here" autocomplete="off" style="text-transform:uppercase;">
+        <div class="modal-error" id="clear-step2-error"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-surface" id="clear-back-2">← Back</button>
+        <button class="btn btn-danger" id="clear-next-2">Confirm →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3A: Final confirm (user data only) -->
+    <div id="clear-step-3a" style="display:none;">
+      <div class="modal-title" style="color:var(--danger);">🚨 Last Warning</div>
+      <div class="modal-sub">Your planner plans &amp; ticks, test records, and chapter ratings will be permanently deleted. This cannot be undone.</div>
+      <div class="modal-actions">
+        <button class="btn btn-surface" id="clear-cancel-3a">Cancel</button>
+        <button class="btn btn-danger" id="clear-confirm-3a">Yes, Erase User Data</button>
+      </div>
+    </div>
+
+    <!-- STEP 3B: Editor password + final confirm (both) -->
+    <div id="clear-step-3b" style="display:none;">
+      <div class="modal-title" style="color:var(--danger);">🔐 Editor Password Required</div>
+      <div class="modal-sub">Erasing all data requires Editor Mode verification. Enter your Editor password to proceed.</div>
+      <div class="modal-input-row">
+        <input type="password" id="clear-editor-pw" placeholder="Editor Password" autocomplete="off">
+        <div class="modal-error" id="clear-step3b-error"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-surface" id="clear-cancel-3b">Cancel</button>
+        <button class="btn btn-danger" id="clear-confirm-3b">Erase Everything</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NAME PROMPT MODAL -->
+<div class="modal-overlay" id="name-modal" style="z-index:10000;">
+  <div class="modal-box glass-card" style="max-width:380px;text-align:center;">
+    <div class="modal-title">Hey, Welcome here! 👋</div>
+    <p style="color:var(--text2);font-size:13px;margin:8px 0 18px;">Suffu would love to call you by...</p>
+    <input type="text" id="name-input" placeholder="Your name" autocomplete="off"
+      style="width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface-el);color:var(--text);font-size:15px;font-family:var(--sans);outline:none;box-sizing:border-box;text-align:center;">
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;">
+      <button class="btn btn-accent" id="name-save-btn" style="min-width:120px;">Let's Go! 🚀</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script type="module" src="firebase.js"></script>
+
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
+<div id="login-screen">
+  <div class="login-card glass-card">
+    <div class="login-brand">
+      <div class="login-brand-name">JG. SUFFU</div>
+      <div class="login-brand-tag">CA Intermediate Tracker</div>
+    </div>
+    <div class="login-title">Welcome Back 👋</div>
+    <div class="login-sub">Sign in to access your study tracker</div>
+    <div class="login-field">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="login-btn">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-help" id="login-help" style="display:none;text-align:center;margin-top:14px;">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Forget Password or Register Account or any login related issue???</div>
+      <a href="https://wa.me/919422872892?text=Hey%20Suffu%2C%20I%20came%20to%20you%20regarding%20your%20CA%20Intermediate%20App%2C%20I%20really%20need%20your%20help..." target="_blank" class="whatsapp-btn" id="login-wa-btn">💬 Ask Suffu on WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
