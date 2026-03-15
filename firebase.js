@@ -66,7 +66,8 @@ init();
       checkWeeklyBackupNudge();
       archiveDoneReminders();
       setTimeout(checkAndShowWelcome, 400);
-      initNotifications();
+      // Delay notification permission prompt so it never interrupts the name/welcome modals
+      setTimeout(initNotifications, 3500);
     } else {
       currentUser = null;
       // Load defaults for theme before showing login
