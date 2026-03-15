@@ -202,22 +202,29 @@ function normalizeData() {
 }
 
 var _saveTimer = null;
-function saveData() {
+function saveData(immediate = false) {
   // Instant localStorage write
   localStorage.setItem(getStorageKey(), JSON.stringify(data));
   // Debounced Firestore write (800ms)
   if (window._fbDb && window._doc && window._setDoc && currentUser) {
-    setConnStatus('syncing');
-    clearTimeout(_saveTimer);
-    _saveTimer = setTimeout(async () => {
-      try {
-        const ref = window._doc(window._fbDb, 'users', currentUser.uid, 'data', 'appdata');
-        await window._setDoc(ref, { appdata: JSON.stringify(data) }, { merge: true });
-        setConnStatus('online');
-      } catch(e) {
-        setConnStatus(navigator.onLine ? 'online' : 'offline');
-      }
-    }, 800);
+    if (immediate) {
+      clearTimeout(_saveTimer);
+      const ref = window._doc(window._fbDb, 'users', currentUser.uid, 'data', 'appdata');
+      window._setDoc(ref, { appdata: JSON.stringify(data) }, { merge: true }).catch(()=>{});
+      setConnStatus('online');
+    } else {
+      setConnStatus('syncing');
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(async () => {
+        try {
+          const ref = window._doc(window._fbDb, 'users', currentUser.uid, 'data', 'appdata');
+          await window._setDoc(ref, { appdata: JSON.stringify(data) }, { merge: true });
+          setConnStatus('online');
+        } catch(e) {
+          setConnStatus(navigator.onLine ? 'online' : 'offline');
+        }
+      }, 800);
+    }
   }
 }
 
@@ -232,7 +239,10 @@ function getDayNameShort(s) { return parseDate(s).toLocaleDateString('en-IN',{we
 function getDaysBetween(a,b) { const r=[],s=parseDate(a),e=parseDate(b),c=new Date(s); while(c<=e){r.push(toDateStr(c));c.setDate(c.getDate()+1);} return r; }
 function daysUntil(s) { const t=new Date();t.setHours(0,0,0,0); return Math.ceil((parseDate(s)-t)/86400000); }
 function isSunday(s) { return parseDate(s).getDay()===0; }
-function getTodayStr() { return toDateStr(new Date()); }
+function getTodayStr() {
+  // Respecting Local/IST by using toDateStrSimple for today's value
+  return toDateStrSimple(new Date());
+}
 
 // ============================================================
 // PLANNER UTILS
@@ -1107,7 +1117,7 @@ function doClearUserData() {
   data.planner = [];
   data.tests = [];
   data.subjects.forEach(subj => subj.chapters.forEach(ch => { ch.difficulty = 3; ch.confidence = 3; }));
-  saveData(); openSubjects.clear(); renderAll();
+  saveData(true); openSubjects.clear(); renderAll();
   if (currentUser) {
     localStorage.removeItem('jgsuffu_launched_' + currentUser.uid);
     localStorage.removeItem('jgsuffu_daily_seen_' + currentUser.uid);
@@ -1116,7 +1126,7 @@ function doClearUserData() {
 }
 function doClearAllData() {
   data = defaultData();
-  saveData(); openSubjects.clear(); editorUnlocked = false;
+  saveData(true); openSubjects.clear(); editorUnlocked = false;
   document.body.classList.add('editor-locked');
   document.getElementById('editor-badge').className = 'locked';
   document.getElementById('editor-badge').textContent = '🔒 LOCKED';
@@ -1818,6 +1828,8 @@ function showLoginScreen() {
 }
 
 function hideLoginScreen() {
+  localStorage.setItem('jgsuffu_logged_in', 'true');
+  document.documentElement.classList.add('auth-hint-logged-in');
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app').style.display = '';
 }
@@ -1861,6 +1873,8 @@ function openLogoutModal()  { document.getElementById('logout-modal').classList.
 function closeLogoutModal() { document.getElementById('logout-modal').classList.remove('show'); }
 
 function confirmLogout() {
+  localStorage.removeItem('jgsuffu_logged_in');
+  document.documentElement.classList.remove('auth-hint-logged-in');
   window._signOut(window._fbAuth).catch(() => {});
   currentUser = null;
   closeLogoutModal();
