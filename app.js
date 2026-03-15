@@ -1744,19 +1744,31 @@ let welcomeAutoTimer = null;
 let welcomeCountdownInterval = null;
 
 const FIRST_LAUNCH_TITLE = "Welcome to Suffu's World \ud83d\udc4b";
-const FIRST_LAUNCH_BODY = [
-  "This is your personal CA Intermediate study companion \u2014 built around your schedule, your subjects, and your pace.\n\n",
-  "Here's what you can do here:\n",
-  "  \ud83d\udcc5  Planner \u2014 Plan and tick off what you finish\n",
-  "  \ud83d\udcdd  Test \u2014 Track every test you appear in with score and confidence\n",
-  "  \ud83d\udd50  Schedule \u2014 Set and see your timetable for different day types\n",
-  "  \ud83d\udcda  Subjects \u2014 Add chapters, rate difficulty and confidence\n",
-  "  \ud83d\udcca  Metrics \u2014 Watch your progress build over time\n\n",
-  "\ud83d\udd12 Most editing is behind Editor Mode \u2014 password-locked so you never cross Suffu's Mind [Ahh, Who can cross Suffu \ud83d\ude0f].\n\n",
-  "May/November 2026 is the target. Every day counts.\n\n",
-  "Not to mention, but someone genuinely wants your success.\n",
-  "\u2014 JG. SUFFU"
-].join('');
+// Dynamic — called after name prompt so the name is already saved
+function getFirstLaunchBody() {
+  var n = getDisplayName();
+  return [
+    n + ", this is your personal CA Intermediate study companion \u2014 built around your schedule, your subjects, and your pace.\n\n",
+    "Here's what you can do here:\n",
+    "  \ud83d\udcc5  Planner \u2014 Plan and tick off what you finish\n",
+    "  \ud83d\udcdd  Test \u2014 Track every test you appear in with score and confidence\n",
+    "  \ud83d\udd50  Schedule \u2014 Set and see your timetable for different day types\n",
+    "  \ud83d\udcda  Subjects \u2014 Add chapters, rate difficulty and confidence\n",
+    "  \ud83d\udcca  Metrics \u2014 Watch your progress build over time\n\n",
+    "\ud83d\udd12 Most editing is behind Editor Mode \u2014 password-locked so you never cross Suffu's Mind [Ahh, Who can cross Suffu \ud83d\ude0f].\n\n",
+    "May/November 2026 is the target. Every day counts.\n\n",
+    "Not to mention, but someone genuinely wants your success.\n",
+    "\u2014 JG. SUFFU"
+  ].join('');
+}
+
+function getDisplayName() {
+  // Returns saved userName if set, otherwise alternates "Champ" / "Dear"
+  var n = (data.settings && data.settings.userName || '').trim();
+  if (n) return n;
+  // Simple deterministic pick so it doesn't flicker on re-render
+  return new Date().getDate() % 2 === 0 ? 'Champ' : 'Dear';
+}
 
 function getDailyBody() {
   const now = new Date();
@@ -1766,7 +1778,8 @@ function getDailyBody() {
   const dateStr = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   const days = daysUntil(data.settings.examDate);
   const daysText = days > 0 ? `${days} days` : days === 0 ? 'Exam Day Today 🎓' : 'Exam has passed';
-  return `${greeting}, Dear. 🌤️\n\nToday is ${dayName}, ${dateStr}.\nYou have ${daysText} left until the exam.\n\nMake today count. Open your Planner, see what's on the table today, get to work.`;
+  const name = getDisplayName();
+  return `${greeting}, ${name}! 🌤️\n\nToday is ${dayName}, ${dateStr}.\nYou have ${daysText} left until the exam.\n\nMake today count. Open your Planner, see what's on the table today, get to work.`;
 }
 
 function typewriterEffect(text, el, speed, onDone) {
@@ -1821,31 +1834,37 @@ function showNamePrompt(){
     var n=(document.getElementById('name-input').value||'').trim();
     data.settings.userName=n; saveData(); updateTopBar();
     modal.classList.remove('show');
-    setTimeout(checkAndShowWelcome,350);
+    setTimeout(function(){ checkAndShowWelcome(true); }, 350);
   }
   document.getElementById('name-save-btn').onclick=doSave;
   document.getElementById('name-input').onkeydown=function(e){if(e.key==='Enter')doSave();};
 }
 
-function checkAndShowWelcome() {
+function checkAndShowWelcome(afterNameSave) {
   if (!currentUser) return;
   const launchKey = 'jgsuffu_launched_' + currentUser.uid;
-  const seenKey = 'jgsuffu_daily_seen_' + currentUser.uid;
-  
+  const seenKey   = 'jgsuffu_daily_seen_' + currentUser.uid;
   const hasLaunched = localStorage.getItem(launchKey);
-  const lastSeen = localStorage.getItem(seenKey);
-  const today = getTodayStr();
+  const lastSeen    = localStorage.getItem(seenKey);
+  const today       = getTodayStr();
 
   if (!hasLaunched) {
     // First ever launch
     localStorage.setItem(launchKey, '1');
+    if (!data.settings.userName && !afterNameSave) {
+      // Show name prompt first — welcome fires AFTER name is saved
+      showNamePrompt();
+      return;
+    }
+    // Show first-launch welcome (name is now known)
     localStorage.setItem(seenKey, today);
-    if(!data.settings.userName){showNamePrompt();return;}
-    showWelcomeModal(FIRST_LAUNCH_TITLE, FIRST_LAUNCH_BODY, 22);
+    var name = getDisplayName();
+    showWelcomeModal('Welcome, ' + name + '! 👋', getFirstLaunchBody(), 22);
   } else if (lastSeen !== today) {
-    // First open today
+    // First open of the day
     localStorage.setItem(seenKey, today);
-    showWelcomeModal('👋 Hey, Dear!', getDailyBody(), 28);
+    var name = getDisplayName();
+    showWelcomeModal('👋 Hey, ' + name + '!', getDailyBody(), 28);
   }
 }
 
