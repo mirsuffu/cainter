@@ -5,8 +5,16 @@
 .auth-hint-logged-in #login-screen { display: none !important; }
 .auth-hint-logged-in #app { display: flex !important; }
 
-/* Base smooth colour transitions on everything */
-*, *::before, *::after {
+/* Scoped colour transitions — avoids triggering on every planner cell/canvas/input
+   which caused perceptible lag. Only structural shell elements get this. */
+#app, #topbar, #sidebar, #content, #main,
+.section, .section-header, .section-body,
+.nav-item, .modal-box, .modal-overlay,
+.metric-card, .schedule-card, .subject-block,
+.glass-card, .settings-group, .settings-row,
+.toast, #editor-badge, .btn, .icon-btn, .login-btn,
+.toggle-track, .toggle-thumb,
+#conn-status, #conn-dot, #conn-label {
   transition: background-color 0.2s cubic-bezier(0.4,0,0.2,1),
               border-color 0.2s cubic-bezier(0.4,0,0.2,1),
               color 0.2s cubic-bezier(0.4,0,0.2,1),
@@ -737,9 +745,9 @@ body.editor-locked .plan-input:hover { border-color: transparent; background: tr
 .subj-bar-track { flex: 1; height: 7px; background: var(--surface-el); border-radius: 4px; overflow: hidden; }
 .subj-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
 .subj-bar-pct { font-size: 11px; font-family: var(--mono); color: var(--text2); width: 34px; text-align: right; }
-.conf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; }
-.conf-item { background: var(--surface-el); border-radius: 8px; padding: 9px; }
-.conf-item-name { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.conf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 1; min-height: 0; overflow-y: auto; }
+.conf-item { background: var(--surface-el); border-radius: 8px; padding: 7px 9px; }
+.conf-item-name { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
 .conf-item-body { display: flex; flex-direction: column; gap: 3px; }
 .conf-mini-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
 .conf-mini-label { color: var(--text2); width: 55px; }
