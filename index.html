@@ -16,6 +16,12 @@
 <meta name="apple-mobile-web-app-title" content="JG. SUFFU">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="main.css">
+    <script>
+      // Auth Flash Prevention Hint
+      if (localStorage.getItem('jgsuffu_logged_in') === 'true') {
+        document.documentElement.classList.add('auth-hint-logged-in');
+      }
+    </script>
 </head>
 <body class="editor-locked">
 
