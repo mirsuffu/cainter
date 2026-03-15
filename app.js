@@ -1829,7 +1829,8 @@ function showWelcomeModal(title, bodyText, typeSpeed) {
 function showNamePrompt(){
   var modal=document.getElementById('name-modal'); if(!modal)return;
   modal.classList.add('show');
-  setTimeout(function(){var i=document.getElementById('name-input');if(i)i.focus();},300);
+  // No auto-focus: on mobile, focus() raises keyboard and resizes viewport,
+  // which can crush the fixed overlay. User taps the input naturally.
   function doSave(){
     var n=(document.getElementById('name-input').value||'').trim();
     data.settings.userName=n; saveData(); updateTopBar();
