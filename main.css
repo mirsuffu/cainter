@@ -1,6 +1,10 @@
 /* ============================================================
    LIQUID ANIMATIONS — iOS-style full
    ============================================================ */
+/* Auth Flash Prevention */
+.auth-hint-logged-in #login-screen { display: none !important; }
+.auth-hint-logged-in #app { display: block !important; }
+
 /* Base smooth colour transitions on everything */
 *, *::before, *::after {
   transition: background-color 0.2s cubic-bezier(0.4,0,0.2,1),
